@@ -964,6 +964,269 @@
 
 <script type="text/javascript">
 
+// <a href=“Ajaxで呼び出したいURL" id="manual-ajax">second example</a>
+
+  $.ajax({
+    type: 'GET',
+    // modalダイアログ用のhtmlを外部ファイルから読み込む
+    url: "./event_entry.php",
+    dataType: 'html',
+    // 対象の要素内の最後に、指定したHTMLを追加する
+    success: function (data) {
+      $('body').append(data);
+    }
+  });
+
+
+//--- Cart ボタンが押された場合
+//
+$("#cart-button").on('click', function() {
+
+  // 予約開始期間の初期値をセットする
+  // var from_datetime = $( '#calendar' ).fullCalendar( 'getView' ).start.format( 'YYYY/MM/DD HH:mm' );
+  var from_datetime = $( '#calendar' ).fullCalendar( 'getView' ).start.format( 'YYYY/MM/DD' );
+  from_datetime += " 13:00";
+
+  create_cart_modal( from_datetime );
+
+/*
+ 	// 最新のセッション情報を基にCartに登録済リソース数を取得する
+	var deferred = get_current_cart_value();
+
+  deferred.done( function( data ){
+
+    // Cart内の登録済リソース数が0の場合、Alert表示して、モーダルは開かない
+//    if( data == "0" ){
+    if( parseInt( data ) === 0 ){
+      alert("Cart is empty.");
+    }
+
+    else{
+      // 非表示データとしてユーザID, 代理ユーザIDを転送する
+      $( '#cartModal #userid-text' ).val( "< ?php echo $_SESSION['user_name'] ?>" );
+      $( '#cartModal #proxyid-text' ).val( "< ?php echo $_SESSION['user_name'] ?>" );
+
+      // 必須入力項目のテキストボックスをリセットする（初回時にゴミデータが入る可能性があるため）
+      reset_textbox_val( '#cartModal #overview-text' );
+      reset_textbox_val( '#cartModal #description-text' );
+      reset_textbox_val( '#cartModal #event-to-datetime' );
+
+      // モーダル用の表示データとして、初期表示データを転送する
+      $( '#cartModal #username-text' ).val( "< ?php echo $_SESSION['user_displayname'] ?>" );
+      // 予約開始期間の初期値をセットする
+      var from_datetime = $( '#calendar' ).fullCalendar( 'getView' ).start.format( 'YYYY/MM/DD HH:mm' );
+      $( '#cartModal #from-datetime' ).val( from_datetime );
+
+      $( '#cartModal' ).modal( 'show' );
+
+    }
+  });
+*/
+});
+
+
+//--- Resource ボタンが押された場合
+//
+$( '#resource-button' ).on( 'click', function() {
+
+  // Resource 選択モーダルを表示する
+  create_resources_filter_modal();
+
+});
+
+
+//--- Location ボタンが押された場合
+//
+$( '#location-button' ).on( 'click', function() {
+
+  // Location モーダルを表示する
+  create_location_modal();
+  //$( '#locationModal' ).modal( 'show' );
+
+});
+
+
+//--- Mybooked ボタンが押された場合
+//
+$( '#mybooked-button' ).on( 'click', function() {
+
+// Error  $.removeCookie( 'fullcalendar_location_selected' );
+
+
+//  $( 'input:checkbox[name="location_selecter"]:checked' ).each( function() {
+//      location_selected.push($( this ).val());
+//  });
+//  console.log( "Locations: " + location_selected );
+
+  console.log( "My Booked" );
+  create_mybooked_table();
+//  $('#calendar').fullCalendar('destroy');
+//  $('#calendar').fullCalendar('render');
+  // 新しいリソース情報で再描画する -> これはOK
+//  $('#calendar').fullCalendar('refetchResources');
+//  $(document).ready(function(){
+//    $( '#calendar' ).fullCalendar( 'rerenderEvents' );
+//    $( '#calendar' ).fullCalendar( 'refetchEvents' );
+//    $( '#calendar' ).fullCalendar( 'rerenderEvents' );
+//  });
+// イベントビューの任意更新のテスト
+// refresh_event_view();
+
+});
+
+
+//--- About ボタンが押された場合
+//
+$( '#about-button' ).on( 'click', function() {
+
+// Location モーダルを表示する
+create_about_modal();
+//$( '#locationModal' ).modal( 'show' );
+
+});
+
+
+//---  ロケーション選択用チェックボックスに変更があった場合
+// 動的に付加されたチェックボックス要素のid属性が"location-select-chk-"と前方一致するイベントをトリガとする
+/*
+$( document ).on( 'change', '[id^="location-select-chk-"]', function(){
+
+  var location_selected = [];
+
+  $( 'input:checkbox[name="location_selecter"]:checked' ).each( function(){
+    location_selected.push($( this ).val());
+  });
+
+  // 取得した配列をCookie格納用に文字列に変換する
+  var location_selected_str = location_selected.join(',');
+
+  // 変換後のロケーションの選択状況（文字列）をCookieに収納（60日間）
+  Cookies.set('fullcalendar_location_selected', location_selected_str, {expires: 60});
+
+  console.log( "Locations: " + location_selected );
+  console.log( location_selected );
+  console.log( location_selected_str );
+  console.log( "all location sum: " + $( 'input:checkbox[id^="location-select-chk-"]' ).length )
+  console.log( "checked location sum: " + $( 'input:checkbox[name="location_selecter"]:checked' ).length );
+
+  // 新しいロケーション選択状況を反映させてリソース情報を再描画する
+  $(document).ready(function(){
+     $('#calendar').fullCalendar('refetchResources');
+  });
+
+});
+*/
+
+//---  権限変更用チェックボックスに変更があった場合
+// 動的に付加されたチェックボックス要素のid属性が"#change-auth-chk"のイベントをトリガとする
+$( document ).on( 'change', '#change-auth-chk', function(){
+//$( '#change-auth-chk' ).change( function() {
+
+  var auth_level = "";
+  var update_html = "";
+  console.log( "change-auth-chk: " + $( '#change-auth-chk:checked' ).val() );
+
+  // User -> Admin 昇格の場合
+//if( $( '#change-auth-chk:checked' ).val() === "undefined" ){
+  if( $('#change-auth-chk:checked').is(':checked')){
+    auth_level = "Admin";
+  }
+  // Admin -> User 降格の場合
+  else{
+    auth_level = "User";
+  }
+
+ 	// 最新のセッション情報内の権限レベルを変更する
+	var deferred = change_auth_level_value( auth_level );
+
+  deferred.done( function( data ){
+
+    // セッション情報のユーザ権限レベルに併せてボタンを変更する
+//    $( '#change-auth-label' ).text( auth_level );
+
+    if( auth_level == "Admin" ){
+      update_html = '<input type="checkbox" id="change-auth-chk" autocomplete="off" checked="checked">Admin';
+      $( '#change-auth-label' ).html( update_html );
+    }
+    else{
+      update_html = '<input type="checkbox" id="change-auth-chk" autocomplete="off">User';
+      $( '#change-auth-label' ).html( update_html );
+    }
+
+//    $( '#change-auth-chk:checked' ).text( auth_level );
+//    $( 'label[id="change-auth-chk"]' ).text( auth_level );
+//    $( 'label[id="change-auth-label"]' ).val( '[auth_level]' );
+//    $( '#change-auth-label' ).text( auth_level );
+//    $( '#change-auth-chk' ).text( auth_level );
+//    var update_chk_html = '<input type="checkbox" id="change-auth-chk" autocomplete="off">';
+//    $( '#change-auth-label' ).html( update_chk_html + auth_level );
+//    console.log( "Try to update auth text" );
+    console.log( "New auth level: " + auth_level );
+  });
+
+  // 新しい権限状況を反映させてリソース情報を再描画する
+  $(document).ready(function(){
+     $('#calendar').fullCalendar('refetchResources');
+  });
+
+}); // ~ $( document ).on( 'change', '#change-auth-chk', function()
+
+
+
+//--- 全てのDOMツリー構造及び関連リソースが読み込まれたあとに実行する（初期描画）
+// window.onload = function() {}
+//window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', function() {
+
+/*
+  //-- ロケーション選択設定を Cookieから呼び出して、チェックボックスに適用する
+
+  // Cookieからロケーション選択設定を取得する
+  var location_selected = Cookies.get('fullcalendar_location_selected');
+  var selected_location_id = "";
+
+  // Cookieにロケーション選択設定が存在した場合
+  if ( location_selected !== undefined ){
+
+    console.log( "Load location cookie" );
+
+    // Cookie情報に基づいて選択されたロケーションをクリックする
+    // Cookieから取得した文字列を「split()」メソッドを利用して分割する
+    location_selected.split(',').forEach( function( selected_location_id ) {
+      // 取得したロケーションID毎にチェックボックスをクリックする for Bootstrap
+      $('#location-select-label-' + selected_location_id ).addClass( "active" );
+      // 取得したロケーションID毎にチェックを入れる
+      $('#location-select-chk-' + selected_location_id ).prop( 'checked', true );
+    });
+
+  }
+  // Cookieにロケーション選択設定が存在しない場合
+  else{
+    // 全てのチェックボックスをクリックする for Bootstrap
+    $( 'label[id^="location-select-label-"]' ).addClass( "active" );
+    // 全てのチェックボックスにチェックを入れる
+    $( 'input:checkbox[id^="location-select-chk-"]' ).prop( 'checked', true );
+  }
+
+  console.log( location_selected );
+*/
+
+  // セッション確立ユーザの予約借受状況を Mybookedボタンに反映させる
+  apply_mybooked_button();
+});
+
+/*
+window.onload = function() {
+  console.log( "DOM compleate !!" );
+  //var r_test =  $( 'tr[ data-resource-id ]:has( "fc-icon-down-triangle" )' ).attr( 'data-resource-id' );
+  //console.log( r_test );
+  //$( 'label[id^="location-select-label-"]' ).
+
+
+}
+*/
+
+
 </script>
 
 </div> <!-- div class='fullcalendar_body' -->
